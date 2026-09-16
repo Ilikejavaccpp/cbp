@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "../backend/cbool.h"
 #include "../backend/cstr.h"
 #include "../backend/calias.h"
 
@@ -175,3 +180,7 @@ str str_concat(str a, str b) {
         .length = a.length + b.length,
     };
 }
+
+#ifdef __cplusplus
+}
+#endif

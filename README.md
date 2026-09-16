@@ -28,7 +28,7 @@ A simple one looks like
 ```cpp
 #include "vendor/cbp/src/cbp.hpp"
 
-void build(int argc, char** argv) {
+void build_main(int argc, char** argv) {
     CBuildP::file_t input_files = CBuildP::get_files(argc, argv); // use the cmdline
     CBuildP::file_t output_file = "bin/executable";
 
@@ -48,7 +48,7 @@ using lua).
 ```cpp
 #include "vendor/cbp/src/cbp.hpp"
 
-void build(int argc, char** argv) {
+void build_main(int argc, char** argv) {
     CBuildP::file_t input_files = CBuildP::get_files(argc, argv);
     CBuildP::file_t output_file = "build.exec.calc";
 
@@ -121,6 +121,70 @@ Build output to cbp
 ```
 
 3. Run the executable. Here in the above output...  run `./build.exec.calc`
+
+## Building (writing your first build script)
+
+Now, let's see how to write out our first build script.
+For this, let's use both the C and C++ files and APIs.
+For the C build...
+```cpp
+#include "vendor/cbp/src/cbp.cpp"
+
+void build_main(int argc, char *argv[])
+{
+    /* instead of getting the files from stdin / cmdline,
+     * use predefined files */
+    CBuildP::file_t inf = CBuildP::get_files({
+        argv[0], /* support for not doing this will come out in the near future !! */
+        "examples/src.main.c"
+    });
+    
+    CBuildP::file_t outf = "build/ex.main.raylibex";
+    CBuildP::optimize({
+        .compiler = CBuildP::compilers::c::clang,
+        .level = CBuildP::optimization::max,
+        .debug = true,
+    });
+    CBuildP::include({
+        "examples"
+    });
+    CBuildP::specs(inf, outf);
+    CBuildP::link({
+        "raylib"
+    }, {});
+    CBuildP::compile(inf, outf);
+}
+```
+For the C++ build...
+```cpp
+#include "vendor/cbp/src/cbp.cpp"
+
+void build_main(int argc, char *argv[])
+{
+    /* instead of getting the files from stdin / cmdline,
+     * use predefined files */
+    CBuildP::file_t inf = CBuildP::get_files({
+        argv[0], /* support for not doing this will come out in the near future !! */
+        "examples/src.main.cpp"
+    });
+    
+    CBuildP::file_t outf = "build/ex.main.raylibexpp";
+    CBuildP::optimize({
+        .compiler = CBuildP::compilers::cxx::clang,
+        .level = CBuildP::optimization::max,
+        .debug = true,
+    });
+    CBuildP::include({
+        "examples"
+    });
+    CBuildP::specs(inf, outf);
+    CBuildP::link({
+        "raylib"
+    }, {});
+    CBuildP::compile(inf, outf);
+}
+```
+
 
 ## Docs
 
