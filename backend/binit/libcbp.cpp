@@ -3,6 +3,7 @@
 #include <ostream>
 #include <ctime>
 #include <vector>
+#include <filesystem>
 
 #define NO_USE_BATCH
 #include "../calias.h"
@@ -69,8 +70,8 @@ namespace CBuildP {
             return "";
         }
 
-        std::string result = std::string(argv[1]);
-        for (int i = 2; i < argc; ++i) {
+        std::string result = std::string(argv[1 + __offset]);
+        for (int i = 2 + __offset; i < argc; ++i) {
             if (is_file_C_CXX(std::string(argv[i])))
                 result.append(" " + std::string(argv[i]));
             else {
@@ -172,6 +173,11 @@ namespace CBuildP {
         std::string __ensure_dir__mkdir_c = "mkdir -p " + dir;
         system(__ensure_dir__mkdir_c.c_str());
 
+        /* safety: make sure that the object directory exists */
+        CBuildP::file_t obj_dir = dir + "/compiled";
+        std::string __ensure_obj_dir__mkdir_c = "mkdir -p " + obj_dir;
+        system(__ensure_obj_dir__mkdir_c.c_str());
+
         /* stats */
         std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Compiling library: " << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer;
         for (size_t i = 0; i < file_names.size(); ++i)
@@ -183,10 +189,20 @@ namespace CBuildP {
 
         /* compile the object files */
         bool _succ = true;
+        std::vector<std::string> obj_files;
         for (size_t i = 0; i < file_names.size(); ++i) {
+            std::string mangle_name = file_names[i].substr(0, file_names[i].find_last_of('.'));
+
+            for (u16 j = 0; j < mangle_name.length(); ++j)
+                if (mangle_name[j] == '/') {
+                    mangle_name[j] = '_';
+                }
+
+            CBuildP::file_t obj = obj_dir + "/Zd_." + mangle_name + ".o";
             std::string command = _stdopt.compiler + std::string(" -O") + std::to_string(_stdopt.level) + std::string(" -c ") +
                                 file_names[i] + " -o " +
-                                dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
+                                // dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
+                                obj;
 
             int result = system(command.c_str());
             if (result != 0) {
@@ -194,7 +210,8 @@ namespace CBuildP {
                 _code = 1;
                 _succ = false;
             } else {
-                std::cout << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << ":: " << RESET << "Library Compilation " << RESET << "succeeded" << std::endl;
+                obj_files.push_back(obj);
+                std::cout << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << ":: " << RESET << "Library Compilation " << RESET << "succeeded in compiling " << file_names[i] << " into " << obj << std::endl;
             }
         }
 
@@ -204,8 +221,11 @@ namespace CBuildP {
 
         /* link the object files */
         std::string ar_command = "ar rcs " + dir + "/lib" + libname + ".a";
-        for (size_t i = 0; i < file_names.size(); ++i) {
-            ar_command += " " + dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
+        // for (size_t i = 0; i < file_names.size(); ++i) {
+        //     ar_command += " " + dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
+        // }
+        for (const file_t & o : obj_files) {
+            ar_command += " " + o;
         }
         int result = system(ar_command.c_str());
         if (result != 0) {
@@ -219,10 +239,13 @@ namespace CBuildP {
 
         /* clean: optional */
         if (clean) {
-            for (size_t i = 0; i < file_names.size(); ++i) {
-                std::string obj_file = dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o"; // get the object file path
+            for (const file_t &obj_file : obj_files) {
+                // std::string obj_file = dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o"; // get the object file path
                 std::string rm_cmd = "rm -f " + obj_file; // command
                 system(rm_cmd.c_str()); // new shell with the rm command executed.
+            }
+            if (std::filesystem::is_empty(obj_dir)) {
+                std::filesystem::remove(obj_dir);
             }
         }
     }

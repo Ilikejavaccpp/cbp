@@ -10,7 +10,7 @@ int main()
 {
     InitWindow(800, 600, "My Window");
 
-    Font mono = LoadFont("../assets/fonts/mono.ttf");
+    Font mono = LoadFontEx("assets/fonts/mono.ttf", 64, 0, 0);
 
     SetTargetFPS(144);
 

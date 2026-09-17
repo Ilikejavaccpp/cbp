@@ -2,7 +2,7 @@
 #define COLORS_C_H
 
 #include <stdbool.h>
-#define CEN__STR_ARENA_SIZE 32
+// #define CEN__STR_ARENA_SIZE 32
 
 #include "calias.h"
 #include "cstr.h"
