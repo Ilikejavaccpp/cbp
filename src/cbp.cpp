@@ -10,6 +10,7 @@
 #include "../backend/calias.h"
 #include "../backend/cstr.h"
 #include "../backend/colors.c"
+#include "../backend/cstr.c"
 
 // colors, you may/maynot modify this
 #define COLOR_INFO    "#9c1bef" /* pacman / zig info purple */
