@@ -7,12 +7,12 @@ void build_main(int argc, char *argv[])
      * use predefined files */
     char *my_files[] = {
         argv[0], /* support for not doing this will come out in the near future !! */
-        (char *)"examples/src.main.c",
+        (char *)"examples/src.calc.c",
     };
 
     CBuildP::file_t inf = CBuildP::get_files(2, my_files);
 
-    CBuildP::file_t outf = "build/ex.main.raylibex";
+    CBuildP::file_t outf = "build/ex.calc.raylibex";
     CBuildP::optimize({
         .compiler = CBuildP::compilers::c::clang,
         .level = CBuildP::optimization::max,
@@ -21,9 +21,18 @@ void build_main(int argc, char *argv[])
     CBuildP::include({
         "examples"
     });
+    CBuildP::compile_flags({
+        CBuildP::execcmd("pkg-config --cflags lua5.4")
+    });
+    CBuildP::compile_link({
+        CBuildP::execcmd("pkg-config --libs lua5.4")
+    });
     CBuildP::specs(inf, outf);
     CBuildP::link({
-        "raylib"
+        "raylib", "m",
     }, {});
+    CBuildP::compile_flags({
+        "-pthread"
+    });
     CBuildP::compile(inf, outf);
 }

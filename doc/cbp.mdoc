@@ -1,0 +1,128 @@
+.Dd September 17, 2026
+.Dt CBP 1
+.Os
+.Sh NAME
+.Nm cbp ,
+.Nm bpp
+.Nd C Build Program++ (CBP) build system, utility, and library API
+.Sh SYNOPSIS
+.Nm bpp build
+.Op Ar files
+.Op Fl -options
+.br
+.Nm cbp
+.Op Ar files
+.Nm cbp
+.Sh DESCRIPTION
+.Sy C Build Program++ (CBP)
+is a drop-in, plug-and-play 1-file C/C++ build system and command-line toolchain. Unlike traditional build systems (such as CMake or Make), CBP does not require a separate build directory or a custom Domain Specific Language (DSL). Instead, projects are configured entirely in plain C++ using a single `build.cpp` file.
+.Sh BUILD PLUS PLUS (BPP)
+The
+.Nm bpp
+utility is the bootstrap and management CLI tool for CBP-related projects.
+.Pp
+When executed with:
+.Dl bpp build Ar files ...
+it compiles your `build.cpp` script, generates the project builder executable (`cbp`), and sets up the build environment.
+.Sh C BUILD PROGRAM++ (CBP)
+The
+.Nm cbp
+utility is the project-specific builder executable produced after executing
+.Ic bpp build .
+.Pp
+Running:
+.Dl cbp Ar files ...
+invokes your custom `build_main` routine defined in `build.cpp`, compiles your application source files, links required libraries, and outputs the final binary according to your specifications.
+.Sh LIBCBP API
+The
+.Sy libcbp
+library provides namespaces, structures, and helper functions within the
+.Li CBuildP
+namespace to construct powerful C/C++ build scripts inside `build.cpp`.
+.Ss Namespaces and Structures
+.Bl -tag -width indent
+.It Li CBuildP::opt_t
+Configuration structure for compiler optimization and debugging settings:
+.Bd -literal
+struct opt_t {
+    const char *compiler = "clang";
+    int level = 0;           /* optimization level (0-3) */
+    bool debug = true;       /* generate debug symbols */
+    static void prints(const opt_t &opt);
+};
+.Ed
+.It Li CBuildP::compilers
+Available compiler presets:
+.Bl -tag -width indent
+.It Li c::clang , c::gcc
+C compilers (`"clang"`, `"gcc"`)
+.It Li cpp::clang , cpp::gcc , cxx::clang , cxx::gcc
+C++ compilers (`"clang++"`, `"g++"`)
+.El
+.It Li CBuildP::optimization
+Optimization level constants and aliases:
+.Bl -tag -width indent
+.It Li none (0)
+No optimization
+.It Li level1 (1) , fast (1)
+Basic optimization (`-O1`)
+.It Li level2 (2)
+Intermediate optimization (`-O2`)
+.It Li level3 (3) , max (3)
+Maximum optimization (`-O3`)
+.El
+.It Li CBuildP::libtype
+Library output format constants:
+.Bl -tag -width indent
+.It Li STATIC
+Static library format (`.a`)
+.It Li SHARED
+Shared library format (`.so`)
+.El
+.El
+.Ss Functions
+.Bl -tag -width indent
+.It Fn CBuildP::get_files "int argc" "char *argv[]"
+Extracts and validates input C/C++ source files from command-line arguments.
+.It Fn CBuildP::specs "const file_t &file_names" "const file_t &out_file"
+Prints build specifications including source files, output binary name, optimization level, debug mode, and compiler.
+.It Fn CBuildP::optimize "const opt_t &opt"
+Sets and displays compiler optimization level and debug flag settings with animated feedback.
+.It Fn CBuildP::include "const std::vector<file_t> &dirs"
+Adds include directories (`-Ipath`) for compilation flags.
+.It Fn CBuildP::link "const std::vector<file_t> &libraries" "const std::vector<file_t> &look_for_dirs"
+Links external libraries (`-l`) searching specified directory paths (`-L`).
+.It Fn CBuildP::compile_flags "const std::vector<file_t> &flags"
+Appends custom raw compilation flags (such as `-pthread`).
+.It Fn CBuildP::compile_link "const std::vector<std::string> &link_cmd_comp"
+Appends custom raw linker commands or flags.
+.It Fn CBuildP::compile "const file_t &file_names" "const file_t &outfile"
+Compiles the specified source files with current flags, optimization, and linkage, producing the final executable.
+.It Fn CBuildP::compile_lib "const std::vector<file_t> &file_names" "const file_t &libname" "const file_t &dir" "const std::vector<file_t> &libtypes" "const bool &clean"
+Compiles source files into object files and archives them into a static library (`.a`).
+.It Fn CBuildP::execcmd "const std::string &cmd"
+Executes a shell command via `popen` and returns its output as a `std::string` (useful for integrating tools like `pkg-config`).
+.El
+.Sh EXAMPLES
+A basic `build.cpp` script using `libcbp`:
+.Bd -literal
+#include "vendor/cbp/src/cbp.hpp"
+
+void build_main(int argc, char** argv) {
+    CBuildP::file_t input_files = CBuildP::get_files(argc, argv);
+    CBuildP::file_t output_file = "bin/my_program";
+
+    CBuildP::optimize({
+        .compiler = CBuildP::compilers::cxx::clang,
+        .level = CBuildP::optimization::max,
+        .debug = true
+    });
+    CBuildP::specs(input_files, output_file);
+    CBuildP::compile(input_files, output_file);
+}
+.Ed
+.Sh SEE ALSO
+.Xr make 1 ,
+.Xr cmake 1
+.Sh AUTHORS
+C Build Program++ (CBP) was created for simple, DSL-free C/C++ project building.

@@ -188,4 +188,6 @@ void build_main(int argc, char *argv[])
 
 ## Docs
 
-There is currently no documentation (mandoc) available _yet_.
+There is currently no documentation (mandoc) available _yet_. [CANCEL]
+There is documentation (manpage) at `doc/cbp.mdoc`. You need to manually pass it as a file/directory to `mandoc` or `man`.
+Future support for `PKGBUILD` and auto-mandoc (i.e. `man cbp`) will be added soon.
