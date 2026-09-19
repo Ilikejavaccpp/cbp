@@ -1252,6 +1252,24 @@ namespace CBuildP {
         return result;
     }
 
+    /* use this instead of get_files which queries it from the command line,
+     * or manual addition of files via
+     * EXEC files */
+    std::string add_files(std::vector<file_t> files) {
+        std::string _files = "";
+
+        for (const auto &f : files)
+            if (is_file_C_CXX(f)) {
+                _files.append(f + " ");
+            } else {
+                std::cout << "[ERROR] : Non C/C++ file included, are you sure?" << std::endl;
+                _code = 1;
+                return "";
+            }
+
+        return _files;
+    }
+
     void specs(const file_t &file_names, const file_t &out_file) {
         std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Build info:\n";
         std::cout << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer << "   - C/C++ files : " << RESET << file_names << "\n";
