@@ -98,15 +98,16 @@ Appends custom raw compilation flags (such as `-pthread`).
 Appends custom raw linker commands or flags.
 .It Fn CBuildP::compile "const file_t &file_names" "const file_t &outfile"
 Compiles the specified source files with current flags, optimization, and linkage, producing the final executable.
-.It Fn CBuildP::compile_lib "const std::vector<file_t> &file_names" "const file_t &libname" "const file_t &dir" "const std::vector<file_t> &libtypes" "const bool &clean"
-Compiles source files into object files and archives them into a static library (`.a`).
+.It Fn CBuildP::compile_lib "const std::vector<file_t> &file_names" "const file_t &libname" "const file_t &dir" "const file_t &libtypes" "const bool &clean"
+Compiles source files into object files and archives them into a static library (`.a`) or into a shared library (`.so`).
+To be able to compile it into a shared library, *your compiler of choice* **must** support the `-shared` flag.
 .It Fn CBuildP::execcmd "const std::string &cmd"
 Executes a shell command via `popen` and returns its output as a `std::string` (useful for integrating tools like `pkg-config`).
 .El
 .Sh EXAMPLES
 A basic `build.cpp` script using `libcbp`:
 .Bd -literal
-#include "vendor/cbp/src/cbp.hpp"
+#include "vendor/cbp/src/cbp.cpp"
 
 void build_main(int argc, char** argv) {
     CBuildP::file_t input_files = CBuildP::get_files(argc, argv);
@@ -119,6 +120,27 @@ void build_main(int argc, char** argv) {
     });
     CBuildP::specs(input_files, output_file);
     CBuildP::compile(input_files, output_file);
+}
+.Ed
+
+Making a simple library using `libcbp`:
+.Bd -literal
+#include "vendor/cbp/src/cbp.cpp"
+
+void build_main(int argc, char **argv) {
+    CBuildP::file_t cpp_src_files = CBuildP::get_files(argc, argv);
+    CBuildP::file_t libname = "mylib"; // name of the library
+    CBuildP::file_t dir = "lib";
+    CBuildP::file_t libtype = CBuildP::libtype::SHARED; // library type, this example ensures you have a compiler that supports shared libraries
+
+    // this will automatically use `clang` unless you explicitly set the compiler
+    // via the optimization function: `CBuildP::optimize`
+    CBuildP::optimize({
+        .compiler = CBuildP::compilers::cxx::gcc, // since I bet you hate llvm >:(
+        .level = CBuildP::optimization::max, // level 3 for those who skippe to here
+        .debug = true // generate debug symbols
+    });
+    CBuildP::compile_lib(cpp_src_files, libname, dir, libtype, true); /* clean the build from object file remnants */
 }
 .Ed
 .Sh SEE ALSO
