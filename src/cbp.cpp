@@ -1466,6 +1466,24 @@ namespace CBuildP {
         }
     }
 
+    void run(const file_t  &outfile_exec,
+            const file_t &linkage_preset="",
+            const bool &clean = false) {
+        std::string command = linkage_preset + " " + outfile_exec;
+        int result = system(command.c_str());
+        if (result != 0) {
+            std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Run " << RESET << "failed" << std::endl;
+            _code = 1;
+        } else {
+            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "Run successful\n";
+        }
+        if (clean) {
+            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Cleaning up...\n";
+            std::string clean_command = "rm -f " + outfile_exec;
+            system(clean_command.c_str());
+        }
+    }
+
     namespace compilers {
         namespace c {
             const char* clang = "clang";
