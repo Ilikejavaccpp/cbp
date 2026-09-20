@@ -1346,10 +1346,12 @@ namespace CBuildP {
 
     void compile_lib(const std::vector<file_t> &file_names, const file_t &libname,
                     const file_t &dir = "cbp.build/lib",
-                    const std::vector<file_t> &libtypes = {},
+                    const file_t &libtypes = libtype::STATIC,
                     const bool &clean = true)
     {
         if (file_names.empty() || libname.empty()) return;
+
+        std::string flag = "       ";
 
         /* safety: ensure that the directory exists */
         std::string __ensure_dir__mkdir_c = "mkdir -p " + dir;
@@ -1359,6 +1361,8 @@ namespace CBuildP {
         CBuildP::file_t obj_dir = dir + "/compiled";
         std::string __ensure_obj_dir__mkdir_c = "mkdir -p " + obj_dir;
         system(__ensure_obj_dir__mkdir_c.c_str());
+
+        if (libtypes == libtype::SHARED) flag = " -FPIC ";
 
         /* stats */
         std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Compiling library: " << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer;
@@ -1382,6 +1386,7 @@ namespace CBuildP {
 
             CBuildP::file_t obj = obj_dir + "/Zd_." + mangle_name + ".o";
             std::string command = _stdopt.compiler + std::string(" -O") + std::to_string(_stdopt.level) + std::string(" -c ") +
+                                flag +
                                 file_names[i] + " -o " +
                                 // dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
                                 obj;
@@ -1402,21 +1407,38 @@ namespace CBuildP {
                             // result check in the for loop iteration
 
         /* link the object files */
-        std::string ar_command = "ar rcs " + dir + "/lib" + libname + ".a";
-        // for (size_t i = 0; i < file_names.size(); ++i) {
-        //     ar_command += " " + dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
-        // }
-        for (const file_t & o : obj_files) {
-            ar_command += " " + o;
+        if (libtypes == libtype::STATIC) {
+            std::string ar_command = "ar rcs " + dir + "/lib" + libname + ".a";
+            // for (size_t i = 0; i < file_names.size(); ++i) {
+            //     ar_command += " " + dir + "/" + file_names[i].substr(0, file_names[i].find_last_of('.')) + ".o";
+            // }
+            for (const file_t & o : obj_files) {
+                ar_command += " " + o;
+            }
+            int result = system(ar_command.c_str());
+            if (result != 0) {
+                std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Library Linking " << RESET << "failed" << std::endl;
+                _code = 1;
+            } else {
+                std::cout << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << ":: " << RESET << "Library Linking " << RESET << "succeeded" << std::endl;
+                std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Library " << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer << "lib" << libname << ".a" << RESET << " created" << std::endl;
+                std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "DONE" << RESET << std::endl;
+            }
         }
-        int result = system(ar_command.c_str());
-        if (result != 0) {
-            std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Library Linking " << RESET << "failed" << std::endl;
-            _code = 1;
-        } else {
-            std::cout << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << ":: " << RESET << "Library Linking " << RESET << "succeeded" << std::endl;
-            std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Library " << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer << "lib" << libname << ".a" << RESET << " created" << std::endl;
-            std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "DONE" << RESET << std::endl;
+        else if (libtypes == libtype::SHARED) {
+            std::string cc_command = _stdopt.compiler + std::string(" -shared -o ") + dir + "/lib" + libname + ".so ";
+            for (const file_t & o : obj_files) {
+                cc_command += " " + o;
+            }
+            int result = system(cc_command.c_str());
+            if (result != 0) {
+                std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Library Linking " << RESET << "failed" << std::endl;
+                _code = 1;
+            } else {
+                std::cout << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << ":: " << RESET << "Library Linking " << RESET << "succeeded" << std::endl;
+                std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Library " << hex_to_ansi(COLOR_MUTED, &_arn, false).pointer << "lib" << libname << ".so" << RESET << " created" << std::endl;
+                std::cout << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "DONE" << RESET << std::endl;
+            }
         }
 
         /* clean: optional */
