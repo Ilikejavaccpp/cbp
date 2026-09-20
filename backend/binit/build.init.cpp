@@ -52,5 +52,5 @@ void build_main(int argc, char **argv) {
         .debug = true,
     });
 
-    CBuildP::compile(files, "bpp");
+    CBuildP::compile(files, "cbp");
 }
