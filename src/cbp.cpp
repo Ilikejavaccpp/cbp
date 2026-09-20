@@ -1462,7 +1462,7 @@ namespace CBuildP {
             std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Compilation " << RESET << "failed" << std::endl;
             _code = 1;
         } else {
-            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "Compilation successful\n";
+            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "Compilation successful\n" << RESET;
         }
     }
 
@@ -1475,7 +1475,7 @@ namespace CBuildP {
             std::cout << hex_to_ansi(COLOR_ERROR, &_arn, false).pointer << ":: " << RESET << "[ERROR] : Run " << RESET << "failed" << std::endl;
             _code = 1;
         } else {
-            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "Run successful\n";
+            std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << hex_to_ansi(COLOR_SUCCESS, &_arn, false).pointer << "Run successful\n" << RESET;
         }
         if (clean) {
             std::cout << "\n" << hex_to_ansi(COLOR_INFO, &_arn, false).pointer << ":: " << RESET << "Cleaning up...\n";
