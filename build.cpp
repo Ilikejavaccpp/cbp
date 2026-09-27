@@ -13,10 +13,10 @@ void build_main(int argc, char *argv[])
 
     // CBuildP::file_t inf = CBuildP::get_files(2, my_files);
     CBuildP::file_t inf = CBuildP::add_files({
-        "examples/src.calc.gtk.c"
+        "examples/src/calc.main.c"
     });
 
-    CBuildP::file_t outf = "build/ex.calc.gtkex";
+    CBuildP::file_t outf = "build/ex.calc.gtk_luaex";
     CBuildP::optimize({
         .compiler = CBuildP::compilers::c::clang,
         .level = CBuildP::optimization::max,
